@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="Estilo.css">
+<script src="Animacao.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+
+<style>
+
+.backgroundContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    opacity: 0.5;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; 
+    visibility: hidden;
+}
+
+.interface {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;                    
+    text-align: center;
+    font-style: italic;
+}
+
+.interfaceSuporte {
+    background-color: white;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: left;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+}
+
+.button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+    background: linear-gradient(#800080, #4B0082);  
+    background-color: #800080;  
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-style: italic;
+}
+
+.button:hover {
+    background: linear-gradient(#9306e4, #aa05d8); 
+}
+
+.helpoverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; 
+    visibility: hidden;
+}
+
+.helpcontent {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;                    
+    text-align: left;
+    font-family: 'Courier New', Courier, monospace;
+    font-style: italic;
+}
+
+</style>
+</head>
+<body>
+<div class="backgroundContainer"></div>  
+ 
+<div id="startoverlay" class="overlay">
+    <div class="interface">
+        <h2 style="font-family: Courier New, Courier, monospace;">Iniciar jogo</h2>
+        <button class="button" onclick="startGame()">Jogar</button>
+        <button class="button" onclick="showHelp()">Ajuda</button>
+    </div>
+</div>
+ 
+<div id="pauseoverlay" class="overlay">
+    <div class="interface">
+        <h2>Jogo pausado</h2>
+        <button class="button" onclick="resumegame()">Continuar</button>
+        <button class="button" onclick="restartgame()">Reiniciar</button>
+        <button class="button" onclick="exitgame()">Sair</button>
+    </div>
+</div>
+
+<div id="gameoveroverlay" class="overlay">
+    <div class="interface">
+        <h2>Game Over</h2>
+        <button class="button" onclick="restartgame()">Reiniciar</button>
+        <button class="button" onclick="exitgame()">Sair</button>
+    </div>
+</div>
+
+<div id="helpoverlay" class="helpoverlay">
+    <div class="helpcontent">
+        <h2>Como Jogar</h2>
+        <p>Aperte <img src="./IMG/spacedefinitivo.jpg"> para pular</p>
+        <p2>Aperte <img src="./IMG/esctecla.jpg"> para abrir as opções</p2>
+        <button class="button" onclick="hideHelp()">Fechar</button>
+    </div>
+</div>
+
+<div id="gamecontent" style="display: none;">
+    <div class="game-board"> 
+             
+        <div id="gameOverMessage" class="game-over-message"></div>       
+        <span id="score" class="score">Score:0</span>        
+            <img src="./IMG/ANuvemDoMario.png" class="clouds">
+            <img src="./IMG/mariopipe (2).jpg" class="pipe">            
+            <img src="./IMG/mario-corriendo-gif-6.gif" class="mario">
+         
+    </div>
+</div>
+
+
+<script> 
+src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"
+
+var gameStarted = false;
+var score = 0;
+var scoreInterval;
+var gamePaused = false;
+
+
+function playerPause() {
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            if (gameStarted) {
+                if (!gamePaused) {
+                    showpauseoverlay();
+                    pauseScore();
+                    gamePaused = true;
+                } else {
+                   
+                    hidepauseoverlay();
+                    resumeScore();
+                    gamePaused = false;
+                }
+            }
+        }
+    });
+}
+
+function showstartoverlay() {
+    document.getElementById("startoverlay").style.visibility = "visible";
+    playerPause();
+    pauseAnimation();
+    
+}
+
+function hidestartoverlay() {
+    document.getElementById("startoverlay").style.visibility = "hidden";
+}
+
+function showpauseoverlay() {
+    document.getElementById("pauseoverlay").style.visibility = "visible";
+    pauseAnimation();
+}
+
+function hidepauseoverlay() {
+    document.getElementById("pauseoverlay").style.visibility = "hidden";
+    resumeAnimation();
+}
+
+function showgameoveroverlay() {
+    document.getElementById("gameoveroverlay").style.visibility = "visible";
+    
+}
+
+function hidegameoveroverlay() {
+    document.getElementById("gameoveroverlay").style.visibility = "hidden";
+}
+
+function showHelp() {
+    document.getElementById("helpoverlay").style.visibility = "visible";
+    pauseAnimation();
+}
+
+
+function hideHelp() {
+    document.getElementById("helpoverlay").style.visibility = "hidden";
+    resumeAnimation();
+}
+
+function startGame() {
+    hidestartoverlay();
+    document.getElementById("gamecontent").style.display = "block";
+    gameStarted = true;
+    score = 0; // Reset score when the game starts
+    document.getElementById('score').innerText = "Score: " + score; // Update score display
+    if (gameStarted) {
+        scoreInterval = setInterval(function() {
+            score++;
+            document.getElementById('score').innerText = "Score: " + score;
+        }, 1000);
+    }
+    hidepauseoverlay();
+}
+
+function resumegame() {
+    hidepauseoverlay();
+    gamePaused = false;
+    resumeScore();
+    updateScore();
+}
+
+function reset() {
+    gsap.fromTo('.clouds', {
+        x: "450%", // Começa fora da tela à direita
+    }, {
+        duration: 20,
+        x: "-200%", // Move para dentro da tela
+        repeat: -1,
+        ease: "linear"
+    }).timeScale(1);
+
+    gsap.fromTo(
+        '.pipe',
+        {
+            x:"2500%" // Começa fora da tela à direita
+        },
+        {
+            duration: 10, // Duração inicial
+            x: "-300%", // Move para dentro da tela
+            repeat: -1,
+            ease: "linear",
+            onUpdate: () => {
+                // Função de callback onUpdate, chamada a cada quadro da animação
+                // Verifica a pontuação atual e ajusta a velocidade do cano conforme necessário
+                if (score >= 100) {
+                    gsap.set('.pipe', { x: "3000%" }); // Define a nova posição do cano
+                }
+                if (score >= 300) {
+                    gsap.set('.pipe', { x: "3500%" }); // Define a nova posição do cano
+                }
+                if (score >= 500) {
+                    gsap.set('.pipe', { x: "3700%" }); // Define a nova posição do cano
+                }
+                if (score >= 700) {
+                    gsap.set('.pipe', { x: "3900%" }); // Define a nova posição do cano
+                }
+                if (score >= 1000) {
+                    gsap.set('.pipe', { x: "4200%" }); // Define a nova posição do cano
+                }
+                if (score >= 1500) {
+                    gsap.set('.pipe', { x: "4800%" }); // Define a nova posição do cano
+                }
+                if (score >= 2500) {
+                    gsap.set('.pipe', { x: "6000%" }); // Define a nova posição do cano
+                }
+                if (score >= 3000) {
+                    gsap.set('.pipe', { x: "65000%" }); // Define a nova posição do cano
+                }
+                if (score >= 5000) {
+                    gsap.set('.pipe', { x: "8000%" }); // Define a nova posição do cano
+                }
+                if (score >= 10000) {
+                    gsap.set('.pipe', { x: "15000%" }); // Define a nova posição do cano
+                }
+            }
+        }
+    ).timeScale(3);
+}
+
+function restartgame() {
+    gamePaused = false;
+    clearInterval(scoreInterval);
+    score = 0;
+    document.getElementById("score").innerText = "Score: " + score;
+    reset(); // Chama a função reset para reposicionar os elementos
+    startGame();
+}
+
+
+
+function exitgame() {
+    hidepauseoverlay();
+    window.location.href = window.location.href; 
+    clearInterval(scoreInterval);
+}
+let marioCoordinates = { x: 0, y: 0 };
+
+function pauseAnimation() {
+    const mario = document.querySelector('.mario');
+    const gameboard = document.querySelector('.game-board');
+    const jump = document.querySelector('.jump');
+    
+  
+   
+    mario.src = './IMG/marioparadodefinitivo.png';
+    mario.style.width = '6.6vw';
+    mario.style.position = 'fixed';
+    mario.style.bottom = 0;
+    mario.style.left = '50%'; // Para centralizar horizontalmente
+    mario.style.transform = 'translateX(-50%)'; // Para centralizar horizontalmente
+    // Pausa todas as animações GSAP
+    gsap.globalTimeline.pause();
+
+    // Para pausar animação específica do cano
+    gsap.set('.pipe', { paused: true });
+
+    // Para pausar animação específica das nuvens
+    gsap.set('.clouds', { paused: true });
+
+    // Pausa a pontuação
+    pauseScore();
+
+    // Pausa a animação do elemento .jump
+    
+}
+
+
+// Função para pausar a animação quando a tecla 'Esc' for pressionada
+function handleKeyPress(event) {
+    if (event.key === 'Escape') {
+        pauseAnimation();
+    }
+}
+
+// Adiciona um event listener para verificar quando a tecla é pressionada
+document.addEventListener('keydown', handleKeyPress);
+
+// Adiciona um event listener para verificar quando o mouse é clicado
+document.addEventListener('click', function(event) {
+    // Se a animação estiver pausada e o alvo do clique não for o mario, resume a animação
+    if (gsap.globalTimeline.paused() && event.target !== document.querySelector('.mario')) {
+        gsap.globalTimeline.resume();
+    }
+});
+
+
+    
+
+
+function resumeAnimation() {
+    const mario = document.querySelector('.mario');
+    const jump = document.querySelector('.jump');
+    // Despausa todas as animações GSAP
+    gsap.globalTimeline.resume();
+
+    // Para despausar a animação específica do cano
+    gsap.set('.pipe', { paused: false });
+
+    // Para despausar a animação específica das nuvens
+    gsap.set('.clouds', { paused: false });
+
+    // Reinicia a pontuação
+    resumeScore();
+
+    // Seleciona todos os elementos que você deseja despausar usando querySelectorAll
+    var elements = document.querySelectorAll('.mario, .jump, .score');
+
+    // Para cada elemento, define a propriedade animationPlayState como 'running'
+    elements.forEach(function(element) {
+        element.style.animationPlayState = 'running';
+       
+     
+    });
+    mario.src=('./IMG/mario-corriendo-gif-6.gif');
+    mario.style.width = ("6vw");
+  
+}
+
+
+function updateScore() {
+    clearInterval(scoreInterval);
+    if (gameStarted && !gamePaused) {
+        scoreInterval = setInterval(function() {
+            score++;
+            document.getElementById("score").innerText = "Score: " + score + 1 ;
+        }, 1000);
+    }
+}
+
+function startScore() {
+    if (gameStarted ) {
+        updateScore();
+    }
+}
+
+function resumeScore() {
+    if (gameStarted) {
+        updateScore();
+    }
+}
+
+function pauseScore() {
+    clearInterval(scoreInterval);
+}
+// Impedir rolagem da página enquanto o jogo estiver em execução
+function preventScroll(event) {
+    event.preventDefault();
+}
+
+// Adicionar event listeners para os eventos de rolagem
+function addScrollListeners() {
+    document.addEventListener('scroll', preventScroll, { passive: false });
+}
+
+// Remover event listeners para os eventos de rolagem
+function removeScrollListeners() {
+    document.removeEventListener('scroll', preventScroll);
+}
+
+
+window.onload = showstartoverlay;
+
+</script>
+</body>
+</html>
